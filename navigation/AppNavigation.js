@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Login from "../screens/Login";
 import Home from "../screens/Home";
 import Discussions from "../screens/Discussions";
+import Inscription from "../screens/Inscription";
 import Constants from "../Constants";
 
 const Stack = createNativeStackNavigator();
@@ -20,6 +21,11 @@ export default function AppNavigation() {
           },
         }}
       >
+        <Stack.Screen
+          name="Inscription"
+          component={Inscription}
+          options={{ title: "Page d'inscription" }}
+        />
         <Stack.Screen
           name="Login"
           component={Login}

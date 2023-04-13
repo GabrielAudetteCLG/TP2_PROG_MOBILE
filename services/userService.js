@@ -38,15 +38,17 @@ export const getUsers = async () => {
   return users;
 };
 
-export const addUser = async (email) => {
+export const addUser = async (userInfos) => {
   try {
     const tp1_ref = ref(db, DB_COLLECTION);
     const new_user_ref = push(tp1_ref);
     const new_user = {
-      email,
-      displayName: email.split("@")[0],
-      created: new Date().toLocaleDateString(),
+      name: userInfos[0].value,
+      email: userInfos[1].value,
+      password: userInfos[2].value,
+      phone: userInfos[4].value,
     };
+
     set(new_user_ref, new_user);
 
     new_user.id = new_user_ref.key;
