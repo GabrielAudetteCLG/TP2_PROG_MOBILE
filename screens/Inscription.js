@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
 import { Stack, ListItem, Avatar } from "@react-native-material/core";
-import Constants from "../Constants";
 import { addUser } from "../services/userService";
 
 export default function Inscription({ navigation }) {
@@ -26,11 +25,21 @@ export default function Inscription({ navigation }) {
           textAlign: "center",
           paddingTop: 50,
           fontWeight: "bold",
-          fontSize: "20",
+          fontSize: 20,
         }}
       >
         Restez connecté avec vos proches
       </Text>
+      {/* Naviguer vers la page login */}
+      <Pressable
+        title="Login"
+        style={styles.button}
+        onPress={() => {
+          navigation.navigate("Login");
+        }}
+      >
+        <Text style={{ color: "white", textAlign: "center" }}>Login</Text>
+      </Pressable>
       <View style={styles.view}>
         <TextInput
           style={styles.input}

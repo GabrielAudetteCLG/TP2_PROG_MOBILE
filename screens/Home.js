@@ -54,6 +54,15 @@ export default function Home({ navigation }) {
                 });
               }}
             />
+            {/* Button to naviagtre to contact screen */}
+            <Button
+              title="Naviguer vers contact"
+              color={Constants.primary}
+              tintColor={"white"}
+              onPress={() => {
+                navigation.navigate("Contacts");
+              }}
+            />
           </View>
         )}
     </Stack>
