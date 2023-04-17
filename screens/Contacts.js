@@ -16,6 +16,7 @@ const ContactsScreen = () => {
         });
 
         if (data.length > 0) {
+          console.log("test");
           setContacts(data);
         }
       }
