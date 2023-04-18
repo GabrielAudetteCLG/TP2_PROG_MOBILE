@@ -1,34 +1,28 @@
 import { db } from "../config/firebaseConfig";
 import { ref, push, set, child, get, remove, onValue } from "firebase/database";
 
-const DB_COLLECTION = "tp1";
+const DB_COLLECTION = "customerService";
 
-export const sendMessage = async (userdata, recipientData, message) => {
+export const sendMessage = async (userData, recipientData, messageData) => {
   try {
-    const messages = await getMessages(userdata.id, recipientData.id);
+    const messages = await getMessages(userData.id, recipientData.id);
+
     messages.push({
-      content: message,
+      ...messageData,
       date: new Date().toISOString(),
     });
 
     const messages_ref = ref(
       db,
-      `${DB_COLLECTION}/${userId}/conversations/${recipientId}`
+      `${DB_COLLECTION}/${userData.id}/conversations/${recipientData.id}`
     );
-    const nes_message_ref = push(messages_ref);
-    const new_message = {
-      name: userInfos[0].value,
-      email: userInfos[1].value,
-      password: userInfos[2].value,
-      phone: userInfos[4].value,
-    };
 
-    set(nes_message_ref, new_message);
+    set(messages_ref, messages);
 
-    new_message.id = nes_message_ref.key;
-    return new_message;
+    return messages;
   } catch (e) {
-    console.error("Error adding user: ", e);
+    console.log(userData);
+    // console.error("Error sendMessage() : ", e);
   }
 };
 
@@ -40,12 +34,12 @@ export const getMessages = async (userId, recipientId) => {
     );
 
     if (snapshot.exists()) {
-      return messages;
+      return snapshot.val();
     } else {
       return [];
     }
   } catch (error) {
-    console.error("Error getting messages: ", error);
+    console.error("Error getMessages() :", error);
   }
 
   return [];

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useIsFocused } from "@react-navigation/native";
 import { Text, View, StyleSheet } from "react-native";
 import { Stack, ListItem, Avatar, Button } from "@react-native-material/core";
 import Constants from "../Constants";
+// import { getDatabase, ref, onValue, off } from "firebase/database";
+// import { db } from "../config/firebaseConfig";
 
 const adminData = {
   id: "ExNr00GVAEcfu2oBpouqbsRoIvt2",
@@ -10,10 +11,9 @@ const adminData = {
   displayName: "Support",
 };
 
-export default function Home({ navigation }) {
-  const [userData, setUserData] = useState({
-    email: "john.doe@gmail.com",
-  });
+export default function Inbox({ navigation, route }) {
+  const userData = route.params;
+  console.log("userData (Inbox page)", userData);
   const [lastMessages, setLastMessages] = useState([]);
 
   return (
@@ -48,20 +48,12 @@ export default function Home({ navigation }) {
               title="Débuter la discussion"
               color={Constants.primary}
               tintColor={"white"}
-              onPress={() => {
-                navigation.navigate("Discussions", {
-                  withUser: adminData,
-                });
-              }}
-            />
-            {/* Button to naviagtre to contact screen */}
-            <Button
-              title="Naviguer vers contact"
-              color={Constants.primary}
-              tintColor={"white"}
-              onPress={() => {
-                navigation.navigate("Contacts");
-              }}
+              // onPress={() => {
+              //   navigation.navigate("Discussions", {
+              //     userData,
+              //     recipientData: adminData,
+              //   });
+              // }}
             />
           </View>
         )}

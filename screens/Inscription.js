@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Image,
+} from "react-native";
 import { Stack, ListItem, Avatar } from "@react-native-material/core";
 import { addUser } from "../services/userService";
+import Constants from "../Constants";
 
 export default function Inscription({ navigation }) {
   const [name, setName] = useState("");
@@ -10,6 +18,8 @@ export default function Inscription({ navigation }) {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [cellulaire, setCellulaire] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordLengthError, setPasswordLengthError] = useState(false);
   const userInfos = [
     { name: "Nom", value: name },
     { name: "email", value: email },
@@ -20,6 +30,10 @@ export default function Inscription({ navigation }) {
 
   return (
     <Stack spacing={4} style={{ flex: 1 }}>
+      <Image
+        style={styles.logo}
+        source={require("../assets/icon-chat-app-text.png")}
+      />
       <Text
         style={{
           textAlign: "center",
@@ -30,7 +44,6 @@ export default function Inscription({ navigation }) {
       >
         Restez connecté avec vos proches
       </Text>
-      {/* Naviguer vers la page login */}
       <Pressable
         title="Login"
         style={styles.button}
@@ -45,39 +58,69 @@ export default function Inscription({ navigation }) {
           style={styles.input}
           placeholder="Nom"
           placeholderTextColor="black"
+          autoComplete="name"
           onChangeText={(text) => setName(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Email"
           placeholderTextColor="black"
+          keyboardType="email-address"
+          autoComplete="email"
           onChangeText={(text) => setEmail(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Mot de passe"
           placeholderTextColor="black"
+          autoComplete="new-password"
+          secureTextEntry={true}
           onChangeText={(text) => setPassword(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Confirmation"
           placeholderTextColor="black"
+          secureTextEntry={true}
           onChangeText={(text) => setConfirmation(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Cellulaire"
           placeholderTextColor="black"
+          keyboardType="phone-pad"
+          autoComplete="tel"
           onChangeText={(text) => setCellulaire(text)}
         />
+        {passwordError && (
+          <Text style={{ color: "red", textAlign: "center" }}>
+            Les mots de passe ne correspondent pas.
+          </Text>
+        )}
+        {passwordLengthError && (
+          <Text style={{ color: "red", textAlign: "center" }}>
+            Le mot de passe doit contenir au moins 5 caractères.
+          </Text>
+        )}
         <Pressable
           title="Inscription"
           style={styles.button}
           onPress={() => {
-            addUser(userInfos);
-            console.log(JSON.stringify(userInfos.map((info) => info.value)));
-            navigation.navigate("Login");
+            if (password === confirmation) {
+              setPasswordError(false);
+              if (password.length >= 5) {
+                setPasswordLengthError(false);
+                addUser(userInfos);
+                console.log(
+                  JSON.stringify(userInfos.map((info) => info.value))
+                );
+                navigation.navigate("Login");
+              } else {
+                setPasswordLengthError(true);
+              }
+            } else {
+              setPasswordError(true);
+            }
           }}
         >
           <Text style={{ color: "white", textAlign: "center" }}>
@@ -119,8 +162,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     textAlign: "center",
-    backgroundColor: "teal",
+    backgroundColor: Constants.primary,
     color: "black",
     alignSelf: "center",
+  },
+  logo: {
+    height: 80,
+    width: 80,
+    alignSelf: "center",
+    marginTop: 40,
   },
 });

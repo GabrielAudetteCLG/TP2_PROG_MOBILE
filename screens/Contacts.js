@@ -3,8 +3,9 @@ import { View, StyleSheet, Text, FlatList } from "react-native"; // Import FlatL
 import { List } from "react-native-paper";
 import * as Contacts from "expo-contacts";
 import { getUsers } from "../services/userService";
+import { FlashList } from "@shopify/flash-list";
 
-const ContactsScreen = () => {
+const ContactsScreen = ({ navigation }) => {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
@@ -16,7 +17,6 @@ const ContactsScreen = () => {
         });
 
         if (data.length > 0) {
-          console.log("test");
           setContacts(data);
         }
       }
@@ -32,16 +32,18 @@ const ContactsScreen = () => {
           ? item.phoneNumbers[0].number
           : ""
       }
-      onPress={() => alert(JSON.stringify(item))}
+      onPress={() => navigation.navigate("Discussions")}
+      // onPress={() => alert(JSON.stringify(item))}
     />
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <FlashList
         data={contacts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
+        estimatedItemSize={1000}
       />
     </View>
   );

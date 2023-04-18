@@ -11,15 +11,18 @@ export default function Login(props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const authenticate = async () => {
-    if (checkEmail(email) && checkPassword(password)) {
-      const user = await login(email, password);
-      console.log(user);
-      navigation.navigate("Home", {
-        user,
-      });
-    } else {
-      setErrorMessage("Email ou Mot de passe incorrect!");
-    }
+    // if (checkEmail(email) && checkPassword(password)) {
+    //   const user = await login(email, password);
+    //   userInfos = JSON.stringify(user);
+    //   console.log(`UserInfos (Login page)`, userInfos);
+    //   console.log(`UserInfos non JSON.stringify (Login page)`, user);
+    // navigation.navigate("Inbox", {
+    //   userData: userInfos,
+    // });
+    // } else {
+    //   setErrorMessage("Email ou Mot de passe incorrect!");
+    // }
+    navigation.navigate("Inbox");
   };
   const checkEmail = (email) => {
     var regex = /\S+@\S+\.\S+/;
@@ -34,7 +37,7 @@ export default function Login(props) {
       <View style={styles.container}>
         <Image
           style={styles.logo}
-          source={require("../assets/snack-icon.png")}
+          source={require("../assets/icon-chat-app-text.png")}
         />
         <View style={{ marginTop: 10 }}>
           <Text style={styles.errorText}>{errorMessage}</Text>
@@ -53,6 +56,7 @@ export default function Login(props) {
           label="Mot de passe"
           secureTextEntry
           value={password}
+          autoComplete="email"
           onChangeText={(text) => setPassword(text)}
           leading={(props) => (
             <MaterialCommunityIcons name="form-textbox-password" {...props} />
@@ -64,20 +68,6 @@ export default function Login(props) {
           tintColor={Constants.textColor}
           onPress={authenticate}
         />
-        <View style={styles.actionBox}>
-          <Text>{"Vous n'avez pas un compte ?"}</Text>
-          <TouchableOpacity>
-            <Text style={styles.actionBtn}>{"Créer mon compte"}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.actionBox}>
-          <Text>{"Vous avez oublié votre mot de passe?"}</Text>
-          <TouchableOpacity>
-            <Text style={styles.actionBtn}>
-              {"Réinitialiser le mot de passe"}
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </Stack>
   );
@@ -87,11 +77,11 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
   },
   logo: {
     height: 80,
     width: 80,
+    marginTop: 35,
   },
   actionBox: {
     marginTop: 8,
