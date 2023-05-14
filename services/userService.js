@@ -1,59 +1,219 @@
-import { db } from "../config/firebaseConfig";
-import { ref, push, set, child, get, remove, onValue } from "firebase/database";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const DB_COLLECTION = "tp1";
+const API_KEY = "AIzaSyAP85DWvfQCWeAMY-R4Dvh3fkTKDPs2zbE";
 
-export const login = async (email, password) => {
-  const users = await getUsers();
-
-  let user = users.filter((user) => user.email == email)[0];
-
-  if (user) return user;
-
-  user = await addUser(email);
-  return user;
+const saveLocalUser = async (user) => {
+  user.loginDate = new Date();
+  await AsyncStorage.setItem("@user", JSON.stringify(user));
 };
 
-export const getUsers = async () => {
-  const users = [];
+const isConnected = async () => {
+  const userString = await AsyncStorage.getItem("@user");
 
-  try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, DB_COLLECTION));
-    if (snapshot.exists()) {
-      const users_data = snapshot.val();
-      Object.keys(users_data).forEach((user_key) => {
-        users.push({
-          id: user_key,
-          ...users_data[user_key],
-        });
-      });
-    } else {
-      console.log("No data available");
-    }
-  } catch (error) {
-    console.error("Error getting users: ", error);
-  }
+  if (userString) {
+    const user = JSON.parse(userString);
 
-  return users;
-};
+    const result = new Date(user.loginDate);
 
-export const addUser = async (userInfos) => {
-  try {
-    const tp1_ref = ref(db, DB_COLLECTION);
-    const new_user_ref = push(tp1_ref);
-    const new_user = {
-      name: userInfos[0].value,
-      email: userInfos[1].value,
-      password: userInfos[2].value,
-      phone: userInfos[4].value,
+    result.setSeconds(result.getSeconds() + parseInt(user.expiresIn));
+
+    // if (result <= new Date()) {
+    //   // utiliser le refreshtoken et obtenir le idtoken
+    // }
+
+    return {
+      isConnected: result > new Date(),
+      token: user.idToken,
+      email: user.email,
     };
-
-    set(new_user_ref, new_user);
-
-    new_user.id = new_user_ref.key;
-    return new_user;
-  } catch (e) {
-    console.error("Error adding user: ", e);
   }
+
+  return false;
+};
+
+const signup = async (email, password) => {
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      password,
+      returnSecureToken: true,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const errorMessage = getCommonError(data.error.message);
+    return { errorMessage };
+  }
+
+  return { data };
+};
+
+const signin = async (email, password) => {
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      password,
+      returnSecureToken: true,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const errorMessage = getCommonError(data.error.message);
+    return { errorMessage };
+  }
+
+  await saveLocalUser(data);
+
+  return { data };
+};
+
+const sendForgotPassword = async (email) => {
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      requestType: "PASSWORD_RESET",
+      email,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const errorMessage = getCommonError(data.error.message);
+    return { errorMessage };
+  }
+
+  return { data };
+};
+
+const sendVerifyEmail = async (email, idToken) => {
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({
+      requestType: "VERIFY_EMAIL",
+      email,
+      idToken,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const errorMessage = getCommonError(data.error.message);
+    return { errorMessage };
+  }
+
+  return { data };
+};
+
+// const sendVerifyEmail = async (email, idToken) => {
+//   const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`;
+
+//   const response = await fetch(endpoint, {
+//     method: "POST",
+//     body: JSON.stringify({
+//       requestType: "VERIFY_EMAIL",
+//       email,
+//       idToken,
+//     }),
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//   });
+
+//   const data = await response.json();
+
+//   if (data.error) {
+//     const errorMessage = getCommonError(data.error.message);
+//     return { errorMessage };
+//   }
+
+//   return { data };
+// };
+
+const getUserData = async (idToken) => {
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${API_KEY}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    const errorMessage = getCommonError(data.error.message);
+    return { errorMessage };
+  }
+
+  return { data };
+};
+
+const logout = async () => {
+  await AsyncStorage.clear();
+};
+
+const getCommonError = (code) => {
+  switch (code) {
+    case "INVALID_EMAIL":
+      return "L'adresse e-mail est mal formatée.";
+    case "MISSING_EMAIL":
+      return "L'adresse e-mail est invalide.";
+    case "EMAIL_EXISTS":
+      return "L'adresse e-mail est déjà utilisée par un autre compte.";
+    case "OPERATION_NOT_ALLOWED":
+      return "La connexion par mot de passe est désactivée pour ce projet.";
+    case "TOO_MANY_ATTEMPTS_TRY_LATER":
+      return "Nous avons bloqué toutes les demandes de cet appareil en raison d'une activité inhabituelle. Réessayez plus tard.";
+    case "EMAIL_NOT_FOUND":
+      return "Il n'y a pas de fiche utilisateur correspondant à cet identifiant. L'utilisateur a peut-être été supprimé.";
+    case "INVALID_PASSWORD":
+      return "Le mot de passe est invalide ou l'utilisateur n'a pas de mot de passe.";
+    case "MISSING_PASSWORD":
+      return "Le mot de passe est invalide ou l'utilisateur n'a pas de mot de passe.";
+    case "USER_DISABLED":
+      return "Le compte utilisateur a été désactivé par un administrateur.";
+    default:
+      return `Une erreur inhabituelle s'est produite! Veuillez réessayer (code: ${code}).`;
+  }
+};
+
+export {
+  signup,
+  signin,
+  sendForgotPassword,
+  sendVerifyEmail,
+  isConnected,
+  logout,
+  getCommonError,
+  getUserData,
 };

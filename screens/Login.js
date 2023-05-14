@@ -1,37 +1,86 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Stack, TextInput, Button } from "@react-native-material/core";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { login } from "../services/userService";
 import Constants from "../Constants";
+import { getUserData, isConnected, signin } from "../services/userService";
+import { createUserMetadata } from "../data/userData";
 
 export default function Login(props) {
-  const navigation = props.navigation;
   const [errorMessage, setErrorMessage] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  useEffect(function () {
+    const checkIsAuthenticated = async function () {
+      const userConnectedInfo = await isConnected();
+      if (userConnectedInfo) {
+        navigate(userConnectedInfo.token);
+        return;
+      }
+    };
+
+    checkIsAuthenticated();
+  }, []);
+
   const authenticate = async () => {
-    // if (checkEmail(email) && checkPassword(password)) {
-    //   const user = await login(email, password);
-    //   userInfos = JSON.stringify(user);
-    //   console.log(`UserInfos (Login page)`, userInfos);
-    //   console.log(`UserInfos non JSON.stringify (Login page)`, user);
-    // navigation.navigate("Inbox", {
-    //   userData: userInfos,
-    // });
+    const response = await signin(email, password);
+
+    if (response.errorMessage) {
+      setErrorMessage(response.errorMessage);
+      return;
+    }
+
+    navigate(response?.data?.idToken);
+  };
+  const navigate = async (token) => {
+    const userData = await getUserData(token);
+    const metadata = userData?.data?.users[0];
+    console.log("userdata", userData);
+    console.log("metadata", metadata);
+
+    if (metadata?.emailVerified) {
+      metadata.pushToken = await registerForPushNotificationsAsync();
+      const user = await createUserMetadata(metadata);
+      console.log("utilisateur", user);
+      props.navigation.navigate("Inbox", { user });
+    } else {
+      props.navigation.navigate("VerifyEmail", { token });
+    }
+  };
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+
+    // if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
     // } else {
-    //   setErrorMessage("Email ou Mot de passe incorrect!");
+    //   alert('Must use physical device for Push Notifications');
     // }
-    navigation.navigate("Inbox");
-  };
-  const checkEmail = (email) => {
-    var regex = /\S+@\S+\.\S+/;
-    return regex.test(email);
-  };
-  const checkPassword = (password) => {
-    var regex = /\S{5}/;
-    return regex.test(password);
-  };
+
+    return token;
+  }
   return (
     <Stack spacing={2} style={{ margin: 8 }}>
       <View style={styles.container}>

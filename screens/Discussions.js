@@ -4,22 +4,27 @@ import { Stack, TextInput, IconButton } from "@react-native-material/core";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "../Constants";
 import { getMessages, sendMessage } from "../services/messageService";
-
+import * as Notifications from "expo-notifications";
 export default function Discussions({ navigation, route }) {
-  // const { userData, recipientData } = route.params;
+  const { userData, recipientData } = route.params;
   const [chatMessage, setChatMessage] = useState();
   const [messages, setMessages] = useState([]);
-  // console.log(userData);
-  // useEffect(() => {
-  //   const fetchMessages = async () => {
-  //     const user_messages = await getMessages(userData.id, recipientData.id);
-  //     setMessages(user_messages);
-  //   };
+  console.log(userData);
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const user_messages = await getMessages(
+        userData.localId,
+        recipientData.localId
+      );
+      setMessages(user_messages);
+    };
 
-  //   fetchMessages();
-  // }, []);
+    fetchMessages();
+  }, []);
 
   const sendChatMessage = async () => {
+    if (chatMessage.length == 0) return;
+
     const messageData = {
       content: chatMessage,
       from: userData,
@@ -32,18 +37,35 @@ export default function Discussions({ navigation, route }) {
       messageData
     );
 
+    // Send recipient's message
     await sendMessage(recipientData, userData, messageData);
 
+    await scheduleNotification(recipientData.pushToken, chatMessage);
+
     setMessages(user_messages);
+  };
+
+  const scheduleNotification = async (pushToken, content) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Vous avez un nouveau message",
+        body: content,
+        badge: 1,
+        data: {
+          fromUserId: userData.localId,
+        },
+      },
+      trigger: { seconds: 2 },
+    });
   };
 
   const renderMessageItem = ({ item }) => {
     if (!userData) return;
 
     const msgBoxStyle =
-      item["from"].id === userData.id
-        ? styles.messageRight
-        : styles.messageLeft;
+      item["from"].localId === userData.localId
+        ? styles.messageLeft
+        : styles.messageRight;
 
     return (
       <View style={msgBoxStyle}>

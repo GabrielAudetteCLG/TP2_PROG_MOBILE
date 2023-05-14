@@ -9,6 +9,7 @@ import Inbox from "../screens/Inbox";
 import Discussions from "../screens/Discussions";
 import Inscription from "../screens/Inscription";
 import ContactsScreen from "../screens/Contacts";
+import VerifyEmail from "../screens/VerifyEmail";
 import Constants from "../Constants";
 
 const Stack = createNativeStackNavigator();
@@ -63,6 +64,11 @@ export default function AppNavigation() {
           name="Login"
           component={Login}
           options={{ title: "Se connecter" }}
+        />
+        <Stack.Screen
+          name="VerifyEmail"
+          component={VerifyEmail}
+          options={{ title: "Valider votre courriel" }}
         />
         <Stack.Screen
           name="Inbox"
