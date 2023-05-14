@@ -5,22 +5,29 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "../Constants";
 import { getMessages, sendMessage } from "../services/messageService";
 import * as Notifications from "expo-notifications";
+
 export default function Discussions({ navigation, route }) {
   const { userData, recipientData } = route.params;
   const [chatMessage, setChatMessage] = useState();
   const [messages, setMessages] = useState([]);
-  console.log(userData);
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const user_messages = await getMessages(
-        userData.localId,
-        recipientData.localId
-      );
-      setMessages(user_messages);
-    };
 
-    fetchMessages();
-  }, []);
+  useEffect(() => {
+    if (userData && recipientData) {
+      const fetchMessages = async () => {
+        const user_messages = await getMessages(
+          userData.localId,
+          recipientData.localId
+        );
+        setMessages(user_messages);
+      };
+
+      fetchMessages();
+    }
+  }, [userData, recipientData]);
+
+  if (!userData || !recipientData) {
+    return <Text>Loading...</Text>;
+  }
 
   const sendChatMessage = async () => {
     if (chatMessage.length == 0) return;

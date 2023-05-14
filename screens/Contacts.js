@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, FlatList } from "react-native"; // Import FlatList
+import { View, StyleSheet, Text, FlatList } from "react-native";
 import { List } from "react-native-paper";
 import * as Contacts from "expo-contacts";
-import { getUsers } from "../services/userService";
-import { FlashList } from "@shopify/flash-list";
 
-const ContactsScreen = ({ navigation }) => {
+const ContactsScreen = ({ navigation, route }) => {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
@@ -32,18 +30,22 @@ const ContactsScreen = ({ navigation }) => {
           ? item.phoneNumbers[0].number
           : ""
       }
-      onPress={() => navigation.navigate("Discussions")}
-      // onPress={() => alert(JSON.stringify(item))}
+     //! Cause an ERROR  TypeError: Cannot read property 'userData' of undefined, js engine: hermes
+      onPress={() =>
+        navigation.navigate("Discussions", {
+          userData: route.params.userData,
+          recipientData: item,
+        })
+      }
     />
   );
 
   return (
     <View style={styles.container}>
-      <FlashList
+      <FlatList
         data={contacts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={1000}
       />
     </View>
   );

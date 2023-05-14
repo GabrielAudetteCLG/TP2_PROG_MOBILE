@@ -5,30 +5,26 @@ import Constants from "../Constants";
 import { logout } from "../services/userService";
 import { getAdminData } from "../data/userData";
 import { getLastMessages } from "../services/messageService";
-console.log("Load in inbox.js");
-
-// import { getDatabase, ref, onValue, off } from "firebase/database";
-// import { db } from "../config/firebaseConfig";
 
 export default function Inbox({ navigation, route }) {
-  console.log("route", route);
-  console.log("route params", route.params);
-  console.log("route params user", route.params.user);
-  const [userData, setUserData] = useState(route.params.user);
+  const [userData, setUserData] = useState(null);
   const [lastMessages, setLastMessages] = useState([]);
-  if (route.params && route.params.user) {
-    setUserData(route.params.user);
-  }
+
+  useEffect(() => {
+    if (route.params && route.params.user) {
+      setUserData(route.params.user);
+    }
+  }, [route.params]);
+
   useEffect(() => {
     const fetchLastMessages = async () => {
-      console.log("UserData", userData);
       if (userData) {
         const messages = await getLastMessages(userData.localId);
         setLastMessages(messages);
       }
     };
     fetchLastMessages();
-  }, []);
+  }, [userData]);
 
   const signOutUser = async () => {
     await logout();
@@ -46,28 +42,7 @@ export default function Inbox({ navigation, route }) {
 
   return (
     <Stack spacing={4} style={{ flex: 1 }}>
-      <View>
-        {lastMessages.map((message) => {
-          return (
-            <ListItem
-              onPress={() => {
-                navigation.navigate("Discussions", {
-                  withUser: fromUser(message),
-                });
-              }}
-              leadingMode="avatar"
-              leading={
-                <Avatar
-                  color={Constants.primary}
-                  image={require("../assets/avatardefault.png")}
-                />
-              }
-              title={fromUser(message).displayName}
-              secondaryText={`${message.content.substring(0, 30)}...`}
-            />
-          );
-        })}
-      </View>
+      {/* ... other components */}
       {lastMessages.length === 0 &&
         userData &&
         userData.email !== adminData.email && (
@@ -76,7 +51,7 @@ export default function Inbox({ navigation, route }) {
               title="Débuter la discussion"
               color={Constants.primary}
               tintColor={"white"}
-              onPress={() => goToDiscussions()}
+              onPress={() => navigation.navigate("Contacts", { userData })}
             />
           </View>
         )}

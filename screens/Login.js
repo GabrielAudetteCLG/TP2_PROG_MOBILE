@@ -37,18 +37,21 @@ export default function Login(props) {
   const navigate = async (token) => {
     const userData = await getUserData(token);
     const metadata = userData?.data?.users[0];
-    console.log("userdata", userData);
-    console.log("metadata", metadata);
-
+  
     if (metadata?.emailVerified) {
       metadata.pushToken = await registerForPushNotificationsAsync();
       const user = await createUserMetadata(metadata);
-      console.log("utilisateur", user);
-      props.navigation.navigate("Inbox", { user });
+  
+      if (user) {
+        props.navigation.navigate("Inbox", { user });
+      } else {
+        console.log("An error occurred while retrieving user information.");
+      }
     } else {
       props.navigation.navigate("VerifyEmail", { token });
     }
   };
+
   async function registerForPushNotificationsAsync() {
     let token;
 
@@ -61,9 +64,7 @@ export default function Login(props) {
       });
     }
 
-    // if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
@@ -75,12 +76,10 @@ export default function Login(props) {
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
     console.log(token);
-    // } else {
-    //   alert('Must use physical device for Push Notifications');
-    // }
 
     return token;
   }
+
   return (
     <Stack spacing={2} style={{ margin: 8 }}>
       <View style={styles.container}>
@@ -147,3 +146,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
