@@ -15,7 +15,7 @@ import Constants from "../Constants";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function InboxTabs() {
+function InboxTabs({ route }) {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -39,6 +39,7 @@ function InboxTabs() {
             <MaterialCommunityIcons name="contacts" color={color} size={size} />
           ),
         }}
+        initialParams={{ userData: route.params.user }} // Pass userData to ContactsScreen
       />
     </Tab.Navigator>
   );
